@@ -727,8 +727,10 @@ let pr_synpure_vernac_expr v =
   (* Resetting *)
   | VernacResetName id ->
     return (keyword "Reset" ++ spc() ++ pr_lident id)
-  | VernacResetInitial ->
+  | VernacResetInitial None  ->
     return (keyword "Reset Initial")
+  | VernacResetInitial (Some id)  ->
+    return (keyword "Reset Initial" ++ spc() ++ pr_lident id)
   | VernacBack i ->
     return (
       if Int.equal i 1 then keyword "Back" else keyword "Back" ++ pr_intarg i

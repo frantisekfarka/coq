@@ -1169,7 +1169,8 @@ GRAMMAR EXTEND Gram
   command: TOP
     [ [
 (* Resetting *)
-        IDENT "Reset"; IDENT "Initial" -> { VernacSynPure (VernacResetInitial) }
+        IDENT "Reset"; IDENT "Initial"; id = identref -> { VernacSynPure (VernacResetInitial (Some id)) }
+      | IDENT "Reset"; IDENT "Initial" -> { VernacSynPure (VernacResetInitial None) }
       | IDENT "Reset"; id = identref -> { VernacSynPure (VernacResetName id) }
       | IDENT "Back" -> { VernacSynPure (VernacBack 1) }
       | IDENT "Back"; n = natural -> { VernacSynPure (VernacBack n) }

@@ -18,12 +18,12 @@ let has_query_control { CAst.v } =
 
 (* Navigation commands are allowed in a coqtop session but not in a .v file *)
 let is_navigation_vernac = function
-  | VernacSynPure (VernacResetInitial | VernacResetName _ | VernacBack _) -> true
+  | VernacSynPure (VernacResetInitial _ | VernacResetName _ | VernacBack _) -> true
   | _ -> false
 
 (* NB: Reset is now allowed again as asked by A. Chlipala *)
 let is_reset = function
-  | VernacSynPure (VernacResetInitial | VernacResetName _) -> true
+  | VernacSynPure (VernacResetInitial _ | VernacResetName _) -> true
   | _ -> false
 
 let is_debug = function

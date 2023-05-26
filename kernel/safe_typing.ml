@@ -1324,7 +1324,7 @@ let import lib cst vodigest senv =
   if DirPath.equal (ModPath.dp senv.modpath) lib.comp_name then
     CErrors.user_err
       Pp.(strbrk "Cannot load a library with the same name as the current one ("
-          ++ DirPath.print lib.comp_name ++ str").");
+          ++ DirPath.print lib.comp_name ++ str"). >>>" ++ str (ModPath.to_string (current_modpath senv)));
   let mp = MPfile lib.comp_name in
   let mb = lib.comp_mod in
   let env = Environ.push_context_set ~strict:true
@@ -1567,3 +1567,8 @@ Would this be correct with respect to undo's and stuff ?
 let set_strategy k l e = { e with env =
    (Environ.set_oracle e.env
       (Conv_oracle.set_strategy (Environ.oracle e.env) k l)) }
+
+let set_topfile otp senv =
+  match otp with
+  | Some tp -> { senv with modpath = MPfile (DirPath.make [tp])}
+  | None -> senv

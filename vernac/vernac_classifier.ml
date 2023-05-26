@@ -198,7 +198,7 @@ let classify_vernac e =
     (* Stm will install a new classifier to handle these *)
     | VernacBack _ | VernacAbortAll
     | VernacUndoTo _ | VernacUndo _
-    | VernacResetName _ | VernacResetInitial
+    | VernacResetName _ | VernacResetInitial _
     | VernacRestart -> VtMeta
   in
   let static_classifier ~atts e = match e with

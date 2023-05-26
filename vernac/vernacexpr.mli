@@ -441,7 +441,7 @@ type nonrec synpure_vernac_expr =
 
   (* Resetting *)
   | VernacResetName of lident
-  | VernacResetInitial
+  | VernacResetInitial of lident option
   | VernacBack of int
 
   (* Commands *)

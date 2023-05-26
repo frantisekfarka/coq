@@ -210,3 +210,5 @@ let set_share_reduction b =
 
 let set_VM b = globalize0 (Safe_typing.set_VM b)
 let set_native_compiler b = globalize0 (Safe_typing.set_native_compiler b)
+
+let set_topfile b = globalize0 (Safe_typing.set_topfile b)
