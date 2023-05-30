@@ -2218,7 +2218,7 @@ let translate_pure_vernac ?loc ~atts v = let open Vernacextend in match v with
   | VernacUndo _
   | VernacUndoTo _
   | VernacResetName _
-  | VernacResetInitial
+  | VernacResetInitial _
   | VernacBack _ ->
     anomaly (str "type_vernac")
 

@@ -132,7 +132,7 @@ let rec interp_expr ?loc ~atts ~st c =
 
   (* Resetting *)
   | VernacSynPure VernacResetName _  -> CErrors.anomaly (Pp.str "VernacResetName not handled by Stm.")
-  | VernacSynPure VernacResetInitial -> CErrors.anomaly (Pp.str "VernacResetInitial not handled by Stm.")
+  | VernacSynPure VernacResetInitial _ -> CErrors.anomaly (Pp.str "VernacResetInitial not handled by Stm.")
   | VernacSynPure VernacBack _       -> CErrors.anomaly (Pp.str "VernacBack not handled by Stm.")
 
   | VernacSynterp EVernacLoad (verbosely, fname) ->

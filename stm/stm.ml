@@ -1030,7 +1030,7 @@ let stm_vernac_interp ?route id st { verbose; expr } : Vernacstate.t =
    * future refactorings.
   *)
   let is_filtered_command = function
-    VernacSynPure (VernacResetName _ | VernacResetInitial | VernacBack _
+    VernacSynPure (VernacResetName _ | VernacResetInitial _ | VernacBack _
     | VernacRestart | VernacUndo _ | VernacUndoTo _
     | VernacAbortAll) -> true
     | _ -> false
@@ -1056,7 +1056,7 @@ module Backtrack : sig
   val branches_of : Stateid.t -> backup
 
   (* Returns the state that the command should backtract to *)
-  val undo_vernac_classifier : vernac_control -> doc:doc -> Stateid.t
+  val undo_vernac_classifier : vernac_control -> doc:doc -> Stateid.t * Id.t option
   val get_prev_proof : doc:doc -> Stateid.t -> Proof.t option
   val get_proof : doc:doc -> Stateid.t -> Proof.t option
 
@@ -1133,8 +1133,8 @@ end = struct (* {{{ *)
     then undo_costly_in_batch_mode v;
     try
       match v.CAst.v.expr with
-      | VernacSynPure VernacResetInitial ->
-          Stateid.initial
+      | VernacSynPure (VernacResetInitial None) -> (Stateid.initial, None)
+      | VernacSynPure (VernacResetInitial (Some {CAst.v=id})) -> (Stateid.initial, Some id)
       | VernacSynPure (VernacResetName {CAst.v=name}) ->
           let id = VCS.cur_tip () in
           (try
@@ -1142,18 +1142,18 @@ end = struct (* {{{ *)
               fold_until (fun b (id,_,label,_,_) ->
                 if b then Stop id else Cont (List.mem name label))
               false id in
-            oid
+            (oid, None)
           with Not_found ->
-            id)
+            id, None)
       | VernacSynPure (VernacBack n) ->
           let id = VCS.cur_tip () in
           let oid = fold_until (fun n (id,_,_,_,_) ->
             if Int.equal n 0 then Stop id else Cont (n-1)) n id in
-          oid
+          oid, None
       | VernacSynPure (VernacUndo n) ->
           let id = VCS.cur_tip () in
           let oid = fold_until back_tactic n id in
-          oid
+          oid, None
       | VernacSynPure (VernacUndoTo _
         | VernacRestart as e) ->
           let m = match e with VernacUndoTo m -> m | _ -> 0 in
@@ -1170,13 +1170,13 @@ end = struct (* {{{ *)
             0 id in
           let oid = fold_until (fun n (id,_,_,_,_) ->
             if Int.equal n 0 then Stop id else Cont (n-1)) (n-m-1) id in
-          oid
+          oid, None
       | VernacSynPure VernacAbortAll ->
           let id = VCS.cur_tip () in
           let oid = fold_until (fun () (id,vcs,_,_,_) ->
             match Vcs_.branches vcs with [_] -> Stop id | _ -> Cont ())
             () id in
-          oid
+          oid, None
       | _ -> anomaly Pp.(str "incorrect VtMeta classification")
     with
     | Not_found ->
@@ -2557,11 +2557,15 @@ let snapshot_vio ~create_vos ~doc ~output_native_objects ldir long_f_dot_vo =
 let reset_task_queue = Slaves.reset_task_queue
 
 (* Document building *)
-
+open Safe_typing
 (* We process a meta command found in the document *)
-let process_back_meta_command ~newtip ~head oid aast =
+let process_back_meta_command ~newtip ~head oidmp aast =
     let valid = VCS.get_branch_pos head in
+    let oid , omp = oidmp in
     let old_parsing = Option.get @@ VCS.get_parsing_state oid in
+
+    let mp = current_modpath (Global.safe_env ()) in
+    msg_debug Pp.(str "pre: " ++ str (ModPath.to_string mp));
 
     (* Merge in and discard all the branches currently open that were not open in `oid` *)
     let { mine; others } = Backtrack.branches_of oid in
@@ -2582,7 +2586,12 @@ let process_back_meta_command ~newtip ~head oid aast =
         VCS.set_parsing_state id old_parsing)
       (VCS.branches ());
     VCS.checkout_shallowest_proof_branch ();
-    Backtrack.record (); Ok
+    Global.set_topfile omp;
+    Backtrack.record ();
+    let mp = current_modpath (Global.safe_env ()) in
+    msg_debug Pp.(str "post: " ++ str (ModPath.to_string mp));
+
+    Ok
 
 let get_allow_nested_proofs =
   Goptions.declare_bool_option_and_ref
