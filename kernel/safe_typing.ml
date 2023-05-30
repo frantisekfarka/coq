@@ -1324,7 +1324,7 @@ let import lib cst vodigest senv =
   if DirPath.equal (ModPath.dp senv.modpath) lib.comp_name then
     CErrors.user_err
       Pp.(strbrk "Cannot load a library with the same name as the current one ("
-          ++ DirPath.print lib.comp_name ++ str"). >>>" ++ str (ModPath.to_string (current_modpath senv)));
+          ++ DirPath.print lib.comp_name ++ str"). DEBUG current: " ++ str (ModPath.to_string (current_modpath senv)));
   let mp = MPfile lib.comp_name in
   let mb = lib.comp_mod in
   let env = Environ.push_context_set ~strict:true
